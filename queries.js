@@ -7,6 +7,9 @@ const pool = new Pool({
   port: 5432,
 })
 
+
+//Professors RESTful routes
+
 const getProfessors = (request, response) => {
   pool.query('SELECT * FROM professors ORDER BY id ASC', (error, results) => {
     if (error) {
@@ -34,7 +37,7 @@ const createProfessor = (request, response) => {
     if (error) {
       throw error
     }
-    response.status(201).send(`Professor added with ID: ${result.insertId}`)
+    response.status(201).send(`Professor added with ID: ${results.insertId}`)
   })
 }
 
@@ -43,7 +46,7 @@ const updateProfessor = (request, response) => {
   const { name, title, school, department } = request.body
 
   pool.query(
-    'UPDATE professors SET name = $1, title = $2, school = $3, department = $4', [name, title, school, department],
+    'UPDATE professors SET name = $1, title = $2, school = $3, department = $4 WHERE id = $5', [name, title, school, department, id],
     (error, results) => {
       if (error) {
         throw error
@@ -64,10 +67,75 @@ const deleteProfessor = (request, response) => {
   })
 }
 
+//Reviews RESTful routes
+
+const getReviews = (request, response) => {
+  pool.query('SELECT * FROM reviews ORDER BY id ASC', (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
+const getReviewById = (request, response) => {
+  const id = parseInt(request.params.id)
+
+  pool.query('SELECT * FROM reviews WHERE id = $1', [id], (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).json(results.rows)
+  })
+}
+
+const createReview = (request, response) => {
+  const { professor_id, rating, text } = request.body
+
+  pool.query('INSERT INTO reviews (professor_id, rating, text) VALUES ($1, $2, $3)', [professor_id, rating, text], (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(201).send(`Review added with ID: ${results.insertId}`)
+  })
+}
+
+const updateReview = (request, response) => {
+  const id = parseInt(request.params.id) 
+  const { professor_id, rating, text } = request.body
+
+  pool.query(
+    'UPDATE reviews SET professor_id = $1, rating = $2, text = $3 WHERE id = $4', [professor_id, rating, text, id],
+    (error, results) => {
+      if (error) {
+        throw error
+      }
+      response.status(200).send(`Review modified with ID: ${id}`)
+    }
+  )
+}
+
+const deleteReview = (request, response) => {
+  const id = parseInt(request.params.id) 
+
+  pool.query('DELETE FROM reviews WHERE id = $1', [id], (error, results) => {
+    if (error) {
+      throw error
+    }
+    response.status(200).send(`Review deleted with ID: ${id}`)
+  })
+}
+
 module.exports = {
   getProfessors, 
   getProfessorById,
   createProfessor, 
   updateProfessor,
   deleteProfessor,
+
+  getReviews,
+  getReviewById,
+  createReview,
+  updateReview,
+  deleteReview
 }
